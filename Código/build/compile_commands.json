@@ -1,0 +1,20 @@
+[
+{
+  "directory": "/home/matheus/UFRGS/FPI/Trab1/build",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -isystem /usr/include/x86_64-linux-gnu/qt6/QtCore -isystem /usr/include/x86_64-linux-gnu/qt6 -isystem /usr/lib/x86_64-linux-gnu/qt6/mkspecs/linux-g++ -isystem /usr/include/x86_64-linux-gnu/qt6/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt6/QtGui -g -std=gnu++17 -fPIC -o CMakeFiles/Trab1.dir/main.cpp.o -c /home/matheus/UFRGS/FPI/Trab1/main.cpp",
+  "file": "/home/matheus/UFRGS/FPI/Trab1/main.cpp",
+  "output": "CMakeFiles/Trab1.dir/main.cpp.o"
+},
+{
+  "directory": "/home/matheus/UFRGS/FPI/Trab1/build",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -isystem /usr/include/x86_64-linux-gnu/qt6/QtCore -isystem /usr/include/x86_64-linux-gnu/qt6 -isystem /usr/lib/x86_64-linux-gnu/qt6/mkspecs/linux-g++ -isystem /usr/include/x86_64-linux-gnu/qt6/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt6/QtGui -g -std=gnu++17 -fPIC -o CMakeFiles/Trab1.dir/mainwindow.cpp.o -c /home/matheus/UFRGS/FPI/Trab1/mainwindow.cpp",
+  "file": "/home/matheus/UFRGS/FPI/Trab1/mainwindow.cpp",
+  "output": "CMakeFiles/Trab1.dir/mainwindow.cpp.o"
+},
+{
+  "directory": "/home/matheus/UFRGS/FPI/Trab1/build",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -isystem /usr/include/x86_64-linux-gnu/qt6/QtCore -isystem /usr/include/x86_64-linux-gnu/qt6 -isystem /usr/lib/x86_64-linux-gnu/qt6/mkspecs/linux-g++ -isystem /usr/include/x86_64-linux-gnu/qt6/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt6/QtGui -g -std=gnu++17 -fPIC -o CMakeFiles/Trab1.dir/funcoes.cpp.o -c /home/matheus/UFRGS/FPI/Trab1/funcoes.cpp",
+  "file": "/home/matheus/UFRGS/FPI/Trab1/funcoes.cpp",
+  "output": "CMakeFiles/Trab1.dir/funcoes.cpp.o"
+}
+]
