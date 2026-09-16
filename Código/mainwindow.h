@@ -38,6 +38,10 @@ private:
     void espelharVerticalmente();
     void converterParaCinza();
     void quantizar();
+    void calcularHistograma();
+    void ajustarBrilho();
+    void ajustarContraste();
+    void aplicarNegativo();
     void restaurarOriginal();
     void atualizarResultado(const QString &mensagem);
     void atualizarControles(bool habilitados);
@@ -52,6 +56,10 @@ private:
     QPushButton *verticalButton;
     QPushButton *cinzaButton;
     QPushButton *quantizacaoButton;
+    QPushButton *histogramaButton;
+    QPushButton *brilhoButton;
+    QPushButton *contrasteButton;
+    QPushButton *negativoButton;
     QPushButton *restaurarButton;
 
     std::vector<unsigned char> dadosOriginais;

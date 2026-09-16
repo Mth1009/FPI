@@ -1,0 +1,3 @@
+/home/matheus/Documentos/GitHub/FPI/build/CMakeFiles/Trab1.dir
+/home/matheus/Documentos/GitHub/FPI/build/CMakeFiles/edit_cache.dir
+/home/matheus/Documentos/GitHub/FPI/build/CMakeFiles/rebuild_cache.dir

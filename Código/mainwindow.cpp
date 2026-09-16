@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFrame>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QInputDialog>
 #include <QKeySequence>
@@ -109,7 +110,7 @@ void MainWindow::montarInterface() {
 
     auto *barraFerramentas = new QFrame(central);
     barraFerramentas->setObjectName("toolbar");
-    auto *layoutFerramentas = new QHBoxLayout(barraFerramentas);
+    auto *layoutFerramentas = new QGridLayout(barraFerramentas);
     layoutFerramentas->setContentsMargins(14, 12, 14, 12);
     layoutFerramentas->setSpacing(10);
 
@@ -119,6 +120,10 @@ void MainWindow::montarInterface() {
     restaurarButton = new QPushButton("Restaurar original", barraFerramentas);
     quantizacaoButton = new QPushButton("Quantizar tons", barraFerramentas);
     quantizacaoButton->setToolTip("Escolher o numero maximo de tons (Q)");
+    histogramaButton = new QPushButton("Calcular histograma", barraFerramentas);
+    brilhoButton = new QPushButton("Ajustar brilho", barraFerramentas);
+    contrasteButton = new QPushButton("Ajustar contraste", barraFerramentas);
+    negativoButton = new QPushButton("Negativo", barraFerramentas);
 
     connect(horizontalButton, &QPushButton::clicked, this,
             [this] { espelharHorizontalmente(); });
@@ -128,15 +133,27 @@ void MainWindow::montarInterface() {
             [this] { converterParaCinza(); });
     connect(quantizacaoButton, &QPushButton::clicked, this,
             [this] { quantizar(); });
+    connect(histogramaButton, &QPushButton::clicked, this,
+            [this] { calcularHistograma(); });
+    connect(brilhoButton, &QPushButton::clicked, this,
+            [this] { ajustarBrilho(); });
+    connect(contrasteButton, &QPushButton::clicked, this,
+            [this] { ajustarContraste(); });
+    connect(negativoButton, &QPushButton::clicked, this,
+            [this] { aplicarNegativo(); });
     connect(restaurarButton, &QPushButton::clicked, this,
             [this] { restaurarOriginal(); });
 
-    layoutFerramentas->addWidget(horizontalButton);
-    layoutFerramentas->addWidget(verticalButton);
-    layoutFerramentas->addWidget(cinzaButton);
-    layoutFerramentas->addWidget(quantizacaoButton);
-    layoutFerramentas->addStretch();
-    layoutFerramentas->addWidget(restaurarButton);
+    layoutFerramentas->addWidget(horizontalButton, 0, 0);
+    layoutFerramentas->addWidget(verticalButton, 0, 1);
+    layoutFerramentas->addWidget(cinzaButton, 0, 2);
+    layoutFerramentas->addWidget(quantizacaoButton, 0, 3);
+    layoutFerramentas->addWidget(histogramaButton, 1, 0);
+    layoutFerramentas->addWidget(brilhoButton, 1, 1);
+    layoutFerramentas->addWidget(contrasteButton, 1, 2);
+    layoutFerramentas->addWidget(negativoButton, 1, 3);
+    layoutFerramentas->addWidget(restaurarButton, 0, 4, 2, 1);
+    layoutFerramentas->setColumnStretch(4, 1);
     layoutPrincipal->addWidget(barraFerramentas);
 
     auto *imagensLayout = new QHBoxLayout;
@@ -295,6 +312,46 @@ void MainWindow::quantizar() {
     atualizarResultado(QString("Quantizacao aplicada com ate %1 tons").arg(numeroTons));
 }
 
+void MainWindow::calcularHistograma() {
+    if (dadosResultado.empty()) return;
+
+    histograma(dadosResultado.data(), largura, altura);
+    atualizarResultado("Histograma calculado; imagem convertida para tons de cinza");
+}
+
+void MainWindow::ajustarBrilho() {
+    if (dadosResultado.empty()) return;
+
+    bool confirmado = false;
+    const int valor = QInputDialog::getInt(
+        this, "Ajuste de brilho", "Valor a somar aos pixels (-255 a 255):",
+        0, -255, 255, 1, &confirmado);
+    if (!confirmado) return;
+
+    brilho(dadosResultado.data(), largura, altura, valor);
+    atualizarResultado(QString("Brilho ajustado em %1").arg(valor));
+}
+
+void MainWindow::ajustarContraste() {
+    if (dadosResultado.empty()) return;
+
+    bool confirmado = false;
+    const int fator = QInputDialog::getInt(
+        this, "Ajuste de contraste", "Fator multiplicador (1 a 255):",
+        1, 1, 255, 1, &confirmado);
+    if (!confirmado) return;
+
+    contraste(dadosResultado.data(), largura, altura, fator);
+    atualizarResultado(QString("Contraste multiplicado por %1").arg(fator));
+}
+
+void MainWindow::aplicarNegativo() {
+    if (dadosResultado.empty()) return;
+
+    negativo(dadosResultado.data(), largura, altura);
+    atualizarResultado("Negativo aplicado");
+}
+
 void MainWindow::restaurarOriginal() {
     if (dadosOriginais.empty()) return;
     dadosResultado = dadosOriginais;
@@ -312,6 +369,10 @@ void MainWindow::atualizarControles(bool habilitados) {
     verticalButton->setEnabled(habilitados);
     cinzaButton->setEnabled(habilitados);
     quantizacaoButton->setEnabled(habilitados);
+    histogramaButton->setEnabled(habilitados);
+    brilhoButton->setEnabled(habilitados);
+    contrasteButton->setEnabled(habilitados);
+    negativoButton->setEnabled(habilitados);
     restaurarButton->setEnabled(habilitados);
 }
 

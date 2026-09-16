@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/Trab1.dir/main.cpp.o CMakeFiles/Trab1.dir/mainwindow.cpp.o CMakeFiles/Trab1.dir/funcoes.cpp.o -o Trab1  /usr/lib/x86_64-linux-gnu/libQt6Widgets.so.6.4.2 /usr/lib/x86_64-linux-gnu/libQt6Gui.so.6.4.2 /usr/lib/x86_64-linux-gnu/libQt6Core.so.6.4.2 /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so 

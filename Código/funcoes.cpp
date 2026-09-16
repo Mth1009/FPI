@@ -92,13 +92,14 @@ void quantizacao(unsigned char *dados, int largura, int altura, int n){
     }
 }
 
-void histograma(unsigned char *dados, int largura, int altura){
+std::vector <int> histograma(unsigned char *dados, int largura, int altura){
     conversao_cinza(dados, largura, altura);
     int total_bytes = largura*altura*3;
     std::vector <int> hist(256);
     for (int i = 0; i<total_bytes; i+=3){
         hist[dados[i]]+=1;
     }
+    return hist;
 }
 
 void brilho(unsigned char *dados, int largura, int altura, int n){
@@ -146,5 +147,25 @@ void negativo(unsigned char *dados, int largura, int altura){
     for(int i = 0; i<total_bytes; i++){
         unsigned char negativo = 255-dados[i];
         dados[i] = negativo;    
+    }
+}
+
+unsigned char* ampliar(unsigned char *dados, int largura, int altura){
+    int nova_altura = altura*2-1;
+    int nova_largura = largura*2-1;
+    int total_bytes = nova_altura*nova_largura*3;
+    unsigned char*ampliado = new unsigned char[total_bytes];
+    int flagv=0;
+    int flagh=0;
+    int j =0;
+    for(int i =0; i<total_bytes;i++){
+        if ((i*3)%2==0 && flagv==0 && flagh==0){
+            ampliado[i] = dados[i/2];
+        }
+        j++;
+        if (j==nova_largura){
+            j=0;
+            flagv=1-flagv;
+        }
     }
 }
