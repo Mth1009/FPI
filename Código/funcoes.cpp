@@ -169,3 +169,52 @@ unsigned char* ampliar(unsigned char *dados, int largura, int altura){
         }
     }
 }
+
+```cpp
+void rotacionar90(unsigned char *dados, int largura, int altura, int n){
+    // n = 1  -> horário
+    // n = -1 -> anti-horário
+
+    if(n != 1 && n != -1){
+        return;
+    }
+
+    int total_bytes = largura * altura * 3;
+
+    unsigned char *novo = new unsigned char[total_bytes];
+
+    for(int y = 0; y < altura; y++){
+        for(int x = 0; x < largura; x++){
+
+            int posOriginal = (y * largura + x) * 3;
+
+            int novoX;
+            int novoY;
+
+            if(n == 1){
+                // 90° horário
+                novoX = altura - 1 - y;
+                novoY = x;
+            }
+            else{
+                // 90° anti-horário
+                novoX = y;
+                novoY = largura - 1 - x;
+            }
+
+            // A nova imagem tem largura = altura original
+            int posNova = (novoY * altura + novoX) * 3;
+
+            novo[posNova]     = dados[posOriginal];
+            novo[posNova + 1] = dados[posOriginal + 1];
+            novo[posNova + 2] = dados[posOriginal + 2];
+        }
+    }
+
+    for(int i = 0; i < total_bytes; i++){
+        dados[i] = novo[i];
+    }
+
+    delete[] novo;
+}
+```
