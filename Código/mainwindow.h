@@ -6,6 +6,7 @@
 
 #include <vector>
 
+class QComboBox;
 class QLabel;
 class QPushButton;
 
@@ -31,6 +32,7 @@ public:
 
 private:
     void montarInterface();
+    void aplicarOperacaoSelecionada();
     void criarAtalhos();
     void abrirImagem();
     void salvarImagem();
@@ -42,6 +44,10 @@ private:
     void ajustarBrilho();
     void ajustarContraste();
     void aplicarNegativo();
+    void reduzirImagem();
+    void rotacionarHorario();
+    void rotacionarAntiHorario();
+    void informarAmpliacaoIndisponivel();
     void restaurarOriginal();
     void atualizarResultado(const QString &mensagem);
     void atualizarControles(bool habilitados);
@@ -52,20 +58,16 @@ private:
     QLabel *nomeArquivoLabel;
     QLabel *detalhesLabel;
     QPushButton *salvarButton;
-    QPushButton *horizontalButton;
-    QPushButton *verticalButton;
-    QPushButton *cinzaButton;
-    QPushButton *quantizacaoButton;
-    QPushButton *histogramaButton;
-    QPushButton *brilhoButton;
-    QPushButton *contrasteButton;
-    QPushButton *negativoButton;
+    QComboBox *operacaoCombo;
+    QPushButton *aplicarButton;
     QPushButton *restaurarButton;
 
     std::vector<unsigned char> dadosOriginais;
     std::vector<unsigned char> dadosResultado;
     int largura = 0;
     int altura = 0;
+    int larguraOriginal = 0;
+    int alturaOriginal = 0;
     QString caminhoAtual;
 };
 

@@ -5,11 +5,12 @@
 #include "stb_image_write.h"
 
 #include <QAction>
+#include <QComboBox>
+#include <QDialog>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFrame>
-#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QInputDialog>
 #include <QKeySequence>
@@ -21,6 +22,7 @@
 #include <QVBoxLayout>
 
 #include <cstring>
+#include <utility>
 
 ImagePanel::ImagePanel(const QString &titulo, QWidget *parent)
     : QWidget(parent), imagemLabel(new QLabel(this)) {
@@ -110,50 +112,42 @@ void MainWindow::montarInterface() {
 
     auto *barraFerramentas = new QFrame(central);
     barraFerramentas->setObjectName("toolbar");
-    auto *layoutFerramentas = new QGridLayout(barraFerramentas);
+    auto *layoutFerramentas = new QHBoxLayout(barraFerramentas);
     layoutFerramentas->setContentsMargins(14, 12, 14, 12);
     layoutFerramentas->setSpacing(10);
 
-    horizontalButton = new QPushButton("Espelhar horizontal", barraFerramentas);
-    verticalButton = new QPushButton("Espelhar vertical", barraFerramentas);
-    cinzaButton = new QPushButton("Tons de cinza", barraFerramentas);
-    restaurarButton = new QPushButton("Restaurar original", barraFerramentas);
-    quantizacaoButton = new QPushButton("Quantizar tons", barraFerramentas);
-    quantizacaoButton->setToolTip("Escolher o numero maximo de tons (Q)");
-    histogramaButton = new QPushButton("Calcular histograma", barraFerramentas);
-    brilhoButton = new QPushButton("Ajustar brilho", barraFerramentas);
-    contrasteButton = new QPushButton("Ajustar contraste", barraFerramentas);
-    negativoButton = new QPushButton("Negativo", barraFerramentas);
+    auto *operacaoLabel = new QLabel("Operacao:", barraFerramentas);
+    operacaoLabel->setObjectName("operationLabel");
 
-    connect(horizontalButton, &QPushButton::clicked, this,
-            [this] { espelharHorizontalmente(); });
-    connect(verticalButton, &QPushButton::clicked, this,
-            [this] { espelharVerticalmente(); });
-    connect(cinzaButton, &QPushButton::clicked, this,
-            [this] { converterParaCinza(); });
-    connect(quantizacaoButton, &QPushButton::clicked, this,
-            [this] { quantizar(); });
-    connect(histogramaButton, &QPushButton::clicked, this,
-            [this] { calcularHistograma(); });
-    connect(brilhoButton, &QPushButton::clicked, this,
-            [this] { ajustarBrilho(); });
-    connect(contrasteButton, &QPushButton::clicked, this,
-            [this] { ajustarContraste(); });
-    connect(negativoButton, &QPushButton::clicked, this,
-            [this] { aplicarNegativo(); });
+    operacaoCombo = new QComboBox(barraFerramentas);
+    operacaoCombo->setMinimumWidth(320);
+    operacaoCombo->addItems({
+        "Espelhar horizontal",
+        "Espelhar vertical",
+        "Converter para tons de cinza",
+        "Quantizar tons",
+        "Exibir histograma",
+        "Ajustar brilho",
+        "Ajustar contraste",
+        "Aplicar negativo",
+        "Reduzir imagem",
+        "Girar 90 graus - horario",
+        "Girar 90 graus - anti-horario",
+        "Ampliar 2x (indisponivel)"
+    });
+
+    aplicarButton = new QPushButton("Aplicar", barraFerramentas);
+    restaurarButton = new QPushButton("Restaurar original", barraFerramentas);
+
+    connect(aplicarButton, &QPushButton::clicked, this,
+            [this] { aplicarOperacaoSelecionada(); });
     connect(restaurarButton, &QPushButton::clicked, this,
             [this] { restaurarOriginal(); });
 
-    layoutFerramentas->addWidget(horizontalButton, 0, 0);
-    layoutFerramentas->addWidget(verticalButton, 0, 1);
-    layoutFerramentas->addWidget(cinzaButton, 0, 2);
-    layoutFerramentas->addWidget(quantizacaoButton, 0, 3);
-    layoutFerramentas->addWidget(histogramaButton, 1, 0);
-    layoutFerramentas->addWidget(brilhoButton, 1, 1);
-    layoutFerramentas->addWidget(contrasteButton, 1, 2);
-    layoutFerramentas->addWidget(negativoButton, 1, 3);
-    layoutFerramentas->addWidget(restaurarButton, 0, 4, 2, 1);
-    layoutFerramentas->setColumnStretch(4, 1);
+    layoutFerramentas->addWidget(operacaoLabel);
+    layoutFerramentas->addWidget(operacaoCombo, 1);
+    layoutFerramentas->addWidget(aplicarButton);
+    layoutFerramentas->addWidget(restaurarButton);
     layoutPrincipal->addWidget(barraFerramentas);
 
     auto *imagensLayout = new QHBoxLayout;
@@ -190,10 +184,34 @@ void MainWindow::montarInterface() {
         QPushButton:disabled { background: #eef0f3; color: #9aa2af; border-color: #e0e3e7; }
         QPushButton#primaryButton { background: #2f6fed; color: white; border-color: #2f6fed; }
         QPushButton#primaryButton:hover { background: #245fd3; }
+        QLabel#operationLabel { color: #344054; font-weight: 700; padding-right: 4px; }
+        QComboBox { background: #ffffff; border: 1px solid #9aabd0; border-radius: 8px; padding: 9px 12px; color: #172033; }
+        QComboBox:hover, QComboBox:focus { border: 1px solid #2f6fed; }
+        QComboBox:disabled { background: #eef0f3; color: #9aa2af; border-color: #e0e3e7; }
         QLabel#fileInfo { color: #344054; font-weight: 600; }
         QLabel#imageDetails { color: #667085; }
         QStatusBar { background: #eef1f5; color: #667085; }
     )");
+}
+
+void MainWindow::aplicarOperacaoSelecionada() {
+    if (dadosResultado.empty()) return;
+
+    switch (operacaoCombo->currentIndex()) {
+        case 0: espelharHorizontalmente(); break;
+        case 1: espelharVerticalmente(); break;
+        case 2: converterParaCinza(); break;
+        case 3: quantizar(); break;
+        case 4: calcularHistograma(); break;
+        case 5: ajustarBrilho(); break;
+        case 6: ajustarContraste(); break;
+        case 7: aplicarNegativo(); break;
+        case 8: reduzirImagem(); break;
+        case 9: rotacionarHorario(); break;
+        case 10: rotacionarAntiHorario(); break;
+        case 11: informarAmpliacaoIndisponivel(); break;
+        default: break;
+    }
 }
 
 void MainWindow::criarAtalhos() {
@@ -236,6 +254,8 @@ void MainWindow::abrirImagem() {
     stbi_image_free(carregada);
     dadosResultado = dadosOriginais;
     caminhoAtual = caminho;
+    larguraOriginal = largura;
+    alturaOriginal = altura;
 
     painelOriginal->setImage(criarQImage(dadosOriginais));
     painelResultado->setImage(criarQImage(dadosResultado));
@@ -315,8 +335,19 @@ void MainWindow::quantizar() {
 void MainWindow::calcularHistograma() {
     if (dadosResultado.empty()) return;
 
-    histograma(dadosResultado.data(), largura, altura);
-    atualizarResultado("Histograma calculado; imagem convertida para tons de cinza");
+    const std::vector<int> valores = hist(dadosResultado.data(), largura, altura);
+    const QImage grafico = imagem_histograma(valores);
+    atualizarResultado("Histograma calculado e exibido em uma nova janela");
+
+    auto *janelaHistograma = new QDialog(this);
+    janelaHistograma->setAttribute(Qt::WA_DeleteOnClose);
+    janelaHistograma->setWindowTitle("Histograma - tons de cinza");
+    auto *layout = new QVBoxLayout(janelaHistograma);
+    auto *graficoLabel = new QLabel(janelaHistograma);
+    graficoLabel->setPixmap(QPixmap::fromImage(grafico).scaled(
+        640, 420, Qt::IgnoreAspectRatio, Qt::FastTransformation));
+    layout->addWidget(graficoLabel);
+    janelaHistograma->show();
 }
 
 void MainWindow::ajustarBrilho() {
@@ -352,27 +383,70 @@ void MainWindow::aplicarNegativo() {
     atualizarResultado("Negativo aplicado");
 }
 
+void MainWindow::reduzirImagem() {
+    if (dadosResultado.empty()) return;
+
+    bool confirmouSx = false;
+    const int sx = QInputDialog::getInt(
+        this, "Reducao da imagem", "Fator horizontal sx:", 2, 1, 255, 1, &confirmouSx);
+    if (!confirmouSx) return;
+
+    bool confirmouSy = false;
+    const int sy = QInputDialog::getInt(
+        this, "Reducao da imagem", "Fator vertical sy:", 2, 1, 255, 1, &confirmouSy);
+    if (!confirmouSy) return;
+
+    const int novaLargura = (largura + sx - 1) / sx;
+    const int novaAltura = (altura + sy - 1) / sy;
+    zoomOut(dadosResultado.data(), largura, altura, sx, sy);
+    dadosResultado.resize(static_cast<size_t>(novaLargura) * novaAltura * 3);
+    largura = novaLargura;
+    altura = novaAltura;
+    atualizarResultado(QString("Imagem reduzida com sx=%1 e sy=%2").arg(sx).arg(sy));
+}
+
+void MainWindow::rotacionarHorario() {
+    if (dadosResultado.empty()) return;
+
+    rotacionar90(dadosResultado.data(), largura, altura, 1);
+    std::swap(largura, altura);
+    atualizarResultado("Rotacao de 90 graus no sentido horario aplicada");
+}
+
+void MainWindow::rotacionarAntiHorario() {
+    if (dadosResultado.empty()) return;
+
+    rotacionar90(dadosResultado.data(), largura, altura, -1);
+    std::swap(largura, altura);
+    atualizarResultado("Rotacao de 90 graus no sentido anti-horario aplicada");
+}
+
+void MainWindow::informarAmpliacaoIndisponivel() {
+    QMessageBox::information(
+        this,
+        "Ampliacao indisponivel",
+        "A funcao ampliar ainda nao retorna o buffer criado. "
+        "Para preservar a logica de funcoes.cpp, ela nao foi executada pela interface.");
+}
+
 void MainWindow::restaurarOriginal() {
     if (dadosOriginais.empty()) return;
     dadosResultado = dadosOriginais;
+    largura = larguraOriginal;
+    altura = alturaOriginal;
     atualizarResultado("Resultado restaurado para a imagem original");
 }
 
 void MainWindow::atualizarResultado(const QString &mensagem) {
     painelResultado->setImage(criarQImage(dadosResultado));
+    detalhesLabel->setText(QString("%1 x %2 px  |  RGB").arg(largura).arg(altura));
     statusBar()->showMessage(mensagem, 3500);
 }
 
 void MainWindow::atualizarControles(bool habilitados) {
     salvarButton->setEnabled(habilitados);
-    horizontalButton->setEnabled(habilitados);
-    verticalButton->setEnabled(habilitados);
-    cinzaButton->setEnabled(habilitados);
-    quantizacaoButton->setEnabled(habilitados);
-    histogramaButton->setEnabled(habilitados);
-    brilhoButton->setEnabled(habilitados);
-    contrasteButton->setEnabled(habilitados);
-    negativoButton->setEnabled(habilitados);
+    operacaoCombo->setEnabled(habilitados);
+    aplicarButton->setEnabled(habilitados);
     restaurarButton->setEnabled(habilitados);
 }
 

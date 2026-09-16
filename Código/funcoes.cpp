@@ -201,6 +201,7 @@ unsigned char* ampliar(unsigned char *dados, int largura, int altura){
             flagv=1-flagv;
         }
     }
+    return ampliado;
 }
 
 void rotacionar90(unsigned char *dados, int largura, int altura, int n){
