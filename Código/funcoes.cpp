@@ -92,7 +92,7 @@ void quantizacao(unsigned char *dados, int largura, int altura, int n){
     }
 }
 
-std::vector <int> histograma(unsigned char *dados, int largura, int altura){
+std::vector <int> hist(unsigned char *dados, int largura, int altura){
     conversao_cinza(dados, largura, altura);
     int total_bytes = largura*altura*3;
     std::vector <int> hist(256);
@@ -100,6 +100,39 @@ std::vector <int> histograma(unsigned char *dados, int largura, int altura){
         hist[dados[i]]+=1;
     }
     return hist;
+}
+
+QImage imagem_histograma(std::vector<int> hist){
+    int largura = 256;
+    int altura = 256;
+
+    QImage img(largura, altura, QImage::Format_RGB888);
+    img.fill(Qt::white);
+
+    int maior = 0;
+
+    // procura o maior valor do histograma
+    for(int i = 0; i < 256; i++){
+        if(hist[i] > maior){
+            maior = hist[i];
+        }
+    }
+
+    // desenha cada coluna normalizada
+    for(int x = 0; x < 256; x++){
+
+        int altura_coluna = 0;
+
+        if(maior > 0){
+            altura_coluna = hist[x] * altura / maior;
+        }
+
+        for(int y = altura - 1; y >= altura - altura_coluna; y--){
+            img.setPixel(x, y, qRgb(0, 0, 0));
+        }
+    }
+
+    return img;
 }
 
 void brilho(unsigned char *dados, int largura, int altura, int n){
@@ -170,7 +203,6 @@ unsigned char* ampliar(unsigned char *dados, int largura, int altura){
     }
 }
 
-```cpp
 void rotacionar90(unsigned char *dados, int largura, int altura, int n){
     // n = 1  -> horário
     // n = -1 -> anti-horário
@@ -217,4 +249,73 @@ void rotacionar90(unsigned char *dados, int largura, int altura, int n){
 
     delete[] novo;
 }
-```
+
+void zoomOut(unsigned char *dados, int largura, int altura, int sx, int sy){
+    if(sx < 1 || sy < 1){
+        return;
+    }
+
+    // Arredonda para cima para incluir os pixels que sobrarem nas bordas
+    int novaLargura = (largura + sx - 1) / sx;
+    int novaAltura = (altura + sy - 1) / sy;
+
+    int total_bytes = novaLargura * novaAltura * 3;
+
+    unsigned char *novo = new unsigned char[total_bytes];
+
+    int novoY = 0;
+
+    for(int y = 0; y < altura; y += sy){
+
+        int novoX = 0;
+
+        for(int x = 0; x < largura; x += sx){
+
+            int somaR = 0;
+            int somaG = 0;
+            int somaB = 0;
+
+            int quantidade = 0;
+
+            // Percorre o retângulo sx x sy
+            for(int j = 0; j < sy; j++){
+
+                for(int i = 0; i < sx; i++){
+
+                    int px = x + i;
+                    int py = y + j;
+
+                    // Verifica se ainda está dentro da imagem
+                    if(px < largura && py < altura){
+
+                        int pos = (py * largura + px) * 3;
+
+                        somaR += dados[pos];
+                        somaG += dados[pos + 1];
+                        somaB += dados[pos + 2];
+
+                        quantidade++;
+                    }
+                }
+            }
+
+            int posNova = (novoY * novaLargura + novoX) * 3;
+
+            novo[posNova]     = somaR / quantidade;
+            novo[posNova + 1] = somaG / quantidade;
+            novo[posNova + 2] = somaB / quantidade;
+
+            novoX++;
+        }
+
+        novoY++;
+    }
+
+    // Copia a imagem reduzida para o início do vetor original
+    for(int i = 0; i < total_bytes; i++){
+        dados[i] = novo[i];
+    }
+
+    delete[] novo;
+}
+
