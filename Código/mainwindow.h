@@ -47,7 +47,8 @@ private:
     void reduzirImagem();
     void rotacionarHorario();
     void rotacionarAntiHorario();
-    void informarAmpliacaoIndisponivel();
+    void ampliarImagem();
+    void aplicarConvolucao();
     void restaurarOriginal();
     void atualizarResultado(const QString &mensagem);
     void atualizarControles(bool habilitados);

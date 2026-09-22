@@ -92,40 +92,45 @@ void quantizacao(unsigned char *dados, int largura, int altura, int n){
     }
 }
 
-std::vector <int> hist(unsigned char *dados, int largura, int altura){
-    conversao_cinza(dados, largura, altura);
-    int total_bytes = largura*altura*3;
-    std::vector <int> hist(256);
-    for (int i = 0; i<total_bytes; i+=3){
-        hist[dados[i]]+=1;
+std::vector<int> hist(const unsigned char *dados, int largura, int altura){
+    std::vector<int> histograma(256, 0);
+
+    if(dados == nullptr || largura <= 0 || altura <= 0){
+        return histograma;
     }
-    return hist;
+
+    int total_pixels = largura * altura;
+    for(int i = 0; i < total_pixels; i++){
+        int pos = i * 3;
+        int luminancia = static_cast<int>(
+            0.299 * dados[pos] +
+            0.587 * dados[pos + 1] +
+            0.114 * dados[pos + 2]);
+        histograma[luminancia]++;
+    }
+
+    return histograma;
 }
 
-QImage imagem_histograma(std::vector<int> hist){
-    int largura = 256;
-    int altura = 256;
+QImage imagem_histograma(const std::vector<int> &histograma){
+    const int largura = 256;
+    const int altura = 256;
 
-    QImage img(largura, altura, QImage::Format_RGB888);
+    QImage img(largura, altura, QImage::Format_RGB32);
     img.fill(Qt::white);
 
-    int maior = 0;
-
-    // procura o maior valor do histograma
-    for(int i = 0; i < 256; i++){
-        if(hist[i] > maior){
-            maior = hist[i];
-        }
+    if(histograma.size() < 256){
+        return img;
     }
 
-    // desenha cada coluna normalizada
-    for(int x = 0; x < 256; x++){
+    int maior = *std::max_element(histograma.begin(), histograma.begin() + 256);
+    if(maior <= 0){
+        return img;
+    }
 
-        int altura_coluna = 0;
-
-        if(maior > 0){
-            altura_coluna = hist[x] * altura / maior;
-        }
+    for(int x = 0; x < largura; x++){
+        int altura_coluna = static_cast<int>(
+            std::round((static_cast<double>(histograma[x]) / maior) * altura));
 
         for(int y = altura - 1; y >= altura - altura_coluna; y--){
             img.setPixel(x, y, qRgb(0, 0, 0));
@@ -184,23 +189,56 @@ void negativo(unsigned char *dados, int largura, int altura){
 }
 
 unsigned char* ampliar(unsigned char *dados, int largura, int altura){
-    int nova_altura = altura*2-1;
-    int nova_largura = largura*2-1;
-    int total_bytes = nova_altura*nova_largura*3;
-    unsigned char*ampliado = new unsigned char[total_bytes];
-    int flagv=0;
-    int flagh=0;
-    int j =0;
-    for(int i =0; i<total_bytes;i++){
-        if ((i*3)%2==0 && flagv==0 && flagh==0){
-            ampliado[i] = dados[i/2];
-        }
-        j++;
-        if (j==nova_largura){
-            j=0;
-            flagv=1-flagv;
+    if(dados == nullptr || largura <= 0 || altura <= 0){
+        return nullptr;
+    }
+
+    int nova_altura = altura * 2 - 1;
+    int nova_largura = largura * 2 - 1;
+    int total_bytes = nova_altura * nova_largura * 3;
+    unsigned char *ampliado = new unsigned char[total_bytes]();
+
+    // Primeiro passo: copia os pixels originais e interpola ao longo das linhas.
+    for(int y = 0; y < altura; y++){
+        int novo_y = y * 2;
+
+        for(int x = 0; x < largura; x++){
+            int novo_x = x * 2;
+            int pos_original = (y * largura + x) * 3;
+            int pos_ampliada = (novo_y * nova_largura + novo_x) * 3;
+
+            for(int canal = 0; canal < 3; canal++){
+                ampliado[pos_ampliada + canal] = dados[pos_original + canal];
+            }
+
+            if(x < largura - 1){
+                int pos_direita = (y * largura + x + 1) * 3;
+                int pos_meio = (novo_y * nova_largura + novo_x + 1) * 3;
+
+                for(int canal = 0; canal < 3; canal++){
+                    ampliado[pos_meio + canal] = static_cast<unsigned char>(
+                        (static_cast<int>(dados[pos_original + canal]) +
+                         static_cast<int>(dados[pos_direita + canal])) / 2);
+                }
+            }
         }
     }
+
+    // Segundo passo: interpola as linhas que ficaram em branco.
+    for(int y = 1; y < nova_altura; y += 2){
+        for(int x = 0; x < nova_largura; x++){
+            int pos_cima = ((y - 1) * nova_largura + x) * 3;
+            int pos_baixo = ((y + 1) * nova_largura + x) * 3;
+            int pos_meio = (y * nova_largura + x) * 3;
+
+            for(int canal = 0; canal < 3; canal++){
+                ampliado[pos_meio + canal] = static_cast<unsigned char>(
+                    (static_cast<int>(ampliado[pos_cima + canal]) +
+                     static_cast<int>(ampliado[pos_baixo + canal])) / 2);
+            }
+        }
+    }
+
     return ampliado;
 }
 
@@ -318,5 +356,51 @@ void zoomOut(unsigned char *dados, int largura, int altura, int sx, int sy){
     }
 
     delete[] novo;
+}
+
+
+
+void convolucao(unsigned char *dados, int largura, int altura,
+                const double kernel[3][3], bool passa_baixas, bool adicionar_127){
+    if(dados == nullptr || kernel == nullptr || largura < 3 || altura < 3){
+        return;
+    }
+
+    if(!passa_baixas){
+        conversao_cinza(dados, largura, altura);
+    }
+
+    int total_bytes = largura * altura * 3;
+    std::vector<unsigned char> original(dados, dados + total_bytes);
+
+    // As bordas permanecem iguais; a convolucao e aplicada somente no interior.
+    for(int y = 1; y < altura - 1; y++){
+        for(int x = 1; x < largura - 1; x++){
+            int pos_destino = (y * largura + x) * 3;
+
+            for(int canal = 0; canal < 3; canal++){
+                double soma = 0.0;
+
+                for(int desloc_y = -1; desloc_y <= 1; desloc_y++){
+                    for(int desloc_x = -1; desloc_x <= 1; desloc_x++){
+                        int pos_origem =
+                            ((y + desloc_y) * largura + (x + desloc_x)) * 3 + canal;
+
+                        // Rotacao de 180 graus do kernel antes da aplicacao.
+                        double peso = kernel[1 - desloc_y][1 - desloc_x];
+                        soma += peso * original[pos_origem];
+                    }
+                }
+
+                if(adicionar_127){
+                    soma += 127.0;
+                }
+
+                int resultado = std::clamp(
+                    static_cast<int>(std::round(soma)), 0, 255);
+                dados[pos_destino + canal] = static_cast<unsigned char>(resultado);
+            }
+        }
+    }
 }
 

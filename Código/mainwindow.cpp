@@ -5,12 +5,16 @@
 #include "stb_image_write.h"
 
 #include <QAction>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
+#include <QDialogButtonBox>
 #include <QDir>
+#include <QDoubleSpinBox>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFrame>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QInputDialog>
 #include <QKeySequence>
@@ -133,7 +137,8 @@ void MainWindow::montarInterface() {
         "Reduzir imagem",
         "Girar 90 graus - horario",
         "Girar 90 graus - anti-horario",
-        "Ampliar 2x (indisponivel)"
+        "Ampliar 2x",
+        "Convolucao 3x3"
     });
 
     aplicarButton = new QPushButton("Aplicar", barraFerramentas);
@@ -209,7 +214,8 @@ void MainWindow::aplicarOperacaoSelecionada() {
         case 8: reduzirImagem(); break;
         case 9: rotacionarHorario(); break;
         case 10: rotacionarAntiHorario(); break;
-        case 11: informarAmpliacaoIndisponivel(); break;
+        case 11: ampliarImagem(); break;
+        case 12: aplicarConvolucao(); break;
         default: break;
     }
 }
@@ -421,12 +427,126 @@ void MainWindow::rotacionarAntiHorario() {
     atualizarResultado("Rotacao de 90 graus no sentido anti-horario aplicada");
 }
 
-void MainWindow::informarAmpliacaoIndisponivel() {
-    QMessageBox::information(
-        this,
-        "Ampliacao indisponivel",
-        "A funcao ampliar ainda nao retorna o buffer criado. "
-        "Para preservar a logica de funcoes.cpp, ela nao foi executada pela interface.");
+void MainWindow::ampliarImagem() {
+    if (dadosResultado.empty()) return;
+
+    unsigned char *ampliada = ampliar(dadosResultado.data(), largura, altura);
+    if (ampliada == nullptr) {
+        QMessageBox::warning(this, "Erro na ampliacao",
+                             "Nao foi possivel ampliar a imagem atual.");
+        return;
+    }
+
+    int novaLargura = largura * 2 - 1;
+    int novaAltura = altura * 2 - 1;
+    size_t novoTamanho = static_cast<size_t>(novaLargura) * novaAltura * 3;
+    dadosResultado.assign(ampliada, ampliada + novoTamanho);
+    delete[] ampliada;
+
+    largura = novaLargura;
+    altura = novaAltura;
+    atualizarResultado("Imagem ampliada por interpolacao linear 2x2");
+}
+
+void MainWindow::aplicarConvolucao() {
+    if (dadosResultado.empty()) return;
+
+    QDialog dialogo(this);
+    dialogo.setWindowTitle("Convolucao com kernel 3x3");
+    dialogo.resize(520, 430);
+
+    auto *layoutPrincipal = new QVBoxLayout(&dialogo);
+    auto *linhaPreset = new QHBoxLayout;
+    auto *presetLabel = new QLabel("Filtro:", &dialogo);
+    auto *presetCombo = new QComboBox(&dialogo);
+    presetCombo->addItems({
+        "Arbitrario",
+        "Gaussiano - passa-baixas",
+        "Laplaciano",
+        "Passa-altas generico",
+        "Prewitt Hx",
+        "Prewitt Hy",
+        "Sobel Hx",
+        "Sobel Hy"
+    });
+    linhaPreset->addWidget(presetLabel);
+    linhaPreset->addWidget(presetCombo, 1);
+    layoutPrincipal->addLayout(linhaPreset);
+
+    auto *instrucao = new QLabel(
+        "Edite qualquer peso abaixo. O kernel sera rotacionado 180 graus "
+        "durante a convolucao.", &dialogo);
+    instrucao->setWordWrap(true);
+    layoutPrincipal->addWidget(instrucao);
+
+    auto *gradeKernel = new QGridLayout;
+    QDoubleSpinBox *pesos[3][3];
+
+    for (int linha = 0; linha < 3; linha++) {
+        for (int coluna = 0; coluna < 3; coluna++) {
+            pesos[linha][coluna] = new QDoubleSpinBox(&dialogo);
+            pesos[linha][coluna]->setRange(-999.0, 999.0);
+            pesos[linha][coluna]->setDecimals(4);
+            pesos[linha][coluna]->setSingleStep(0.0625);
+            pesos[linha][coluna]->setValue(
+                linha == 1 && coluna == 1 ? 1.0 : 0.0);
+            gradeKernel->addWidget(pesos[linha][coluna], linha, coluna);
+        }
+    }
+    layoutPrincipal->addLayout(gradeKernel);
+
+    auto *passaBaixas = new QCheckBox(
+        "Aplicar separadamente aos canais RGB (filtro passa-baixas)", &dialogo);
+    auto *adicionar127 = new QCheckBox(
+        "Somar 127 antes do clampping (filtros de relevo)", &dialogo);
+    layoutPrincipal->addWidget(passaBaixas);
+    layoutPrincipal->addWidget(adicionar127);
+
+    static const double kernels[7][9] = {
+        {0.0625, 0.125, 0.0625, 0.125, 0.25, 0.125, 0.0625, 0.125, 0.0625},
+        {0, -1, 0, -1, 4, -1, 0, -1, 0},
+        {-1, -1, -1, -1, 8, -1, -1, -1, -1},
+        {-1, 0, 1, -1, 0, 1, -1, 0, 1},
+        {-1, -1, -1, 0, 0, 0, 1, 1, 1},
+        {-1, 0, 1, -2, 0, 2, -1, 0, 1},
+        {-1, -2, -1, 0, 0, 0, 1, 2, 1}
+    };
+
+    connect(presetCombo, &QComboBox::currentIndexChanged, &dialogo,
+            [=](int indice) {
+        if (indice == 0) return;
+
+        const double *kernel = kernels[indice - 1];
+        for (int linha = 0; linha < 3; linha++) {
+            for (int coluna = 0; coluna < 3; coluna++) {
+                pesos[linha][coluna]->setValue(kernel[linha * 3 + coluna]);
+            }
+        }
+
+        passaBaixas->setChecked(indice == 1);
+        adicionar127->setChecked(indice >= 4);
+    });
+
+    auto *botoes = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialogo);
+    connect(botoes, &QDialogButtonBox::accepted, &dialogo, &QDialog::accept);
+    connect(botoes, &QDialogButtonBox::rejected, &dialogo, &QDialog::reject);
+    layoutPrincipal->addWidget(botoes);
+
+    if (dialogo.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    double kernel[3][3];
+    for (int linha = 0; linha < 3; linha++) {
+        for (int coluna = 0; coluna < 3; coluna++) {
+            kernel[linha][coluna] = pesos[linha][coluna]->value();
+        }
+    }
+
+    convolucao(dadosResultado.data(), largura, altura, kernel,
+               passaBaixas->isChecked(), adicionar127->isChecked());
+    atualizarResultado("Convolucao aplicada: " + presetCombo->currentText());
 }
 
 void MainWindow::restaurarOriginal() {
