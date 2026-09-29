@@ -1205,10 +1205,14 @@ CMakeFiles/Trab1.dir/mainwindow.cpp.o: /home/matheus/Documentos/GitHub/FPI/Códi
   /usr/include/x86_64-linux-gnu/qt6/QtGui/qvector2d.h \
   /usr/include/x86_64-linux-gnu/qt6/QtGui/qvectornd.h \
   /usr/include/x86_64-linux-gnu/qt6/QtGui/qwindowdefs.h \
+  /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QCheckBox \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QComboBox \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QDialog \
+  /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QDialogButtonBox \
+  /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QDoubleSpinBox \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QFileDialog \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QFrame \
+  /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QGridLayout \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QHBoxLayout \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QInputDialog \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QLabel \
@@ -1222,8 +1226,10 @@ CMakeFiles/Trab1.dir/mainwindow.cpp.o: /home/matheus/Documentos/GitHub/FPI/Códi
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qabstractslider.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qabstractspinbox.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qboxlayout.h \
+  /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qcheckbox.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qcombobox.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qdialog.h \
+  /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qdialogbuttonbox.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qfiledialog.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qframe.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qgridlayout.h \
@@ -1238,6 +1244,7 @@ CMakeFiles/Trab1.dir/mainwindow.cpp.o: /home/matheus/Documentos/GitHub/FPI/Códi
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qrubberband.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qsizepolicy.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qslider.h \
+  /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qspinbox.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qstatusbar.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qstyle.h \
   /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qstyleoption.h \
@@ -1264,6 +1271,8 @@ CMakeFiles/Trab1.dir/mainwindow.cpp.o: /home/matheus/Documentos/GitHub/FPI/Códi
 /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qstyleoption.h:
 
 /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qstatusbar.h:
+
+/usr/include/x86_64-linux-gnu/qt6/QtWidgets/qspinbox.h:
 
 /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qpushbutton.h:
 
@@ -1326,6 +1335,8 @@ CMakeFiles/Trab1.dir/mainwindow.cpp.o: /home/matheus/Documentos/GitHub/FPI/Códi
 /usr/include/x86_64-linux-gnu/qt6/QtCore/QList:
 
 /usr/include/x86_64-linux-gnu/qt6/QtCore/QFileInfo:
+
+/usr/include/x86_64-linux-gnu/qt6/QtWidgets/QDialogButtonBox:
 
 /usr/include/x86_64-linux-gnu/qt6/QtCore/QDir:
 
@@ -1595,6 +1606,8 @@ CMakeFiles/Trab1.dir/mainwindow.cpp.o: /home/matheus/Documentos/GitHub/FPI/Códi
 
 /usr/include/x86_64-linux-gnu/qt6/QtCore/qarraydatapointer.h:
 
+/usr/include/x86_64-linux-gnu/qt6/QtWidgets/QCheckBox:
+
 /usr/include/x86_64-linux-gnu/qt6/QtGui/qscreen.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/xmmintrin.h:
@@ -1803,6 +1816,8 @@ CMakeFiles/Trab1.dir/mainwindow.cpp.o: /home/matheus/Documentos/GitHub/FPI/Códi
 
 /usr/include/c++/13/bits/move.h:
 
+/usr/include/x86_64-linux-gnu/qt6/QtWidgets/QDoubleSpinBox:
+
 /usr/include/x86_64-linux-gnu/qt6/QtCore/qlocale.h:
 
 /usr/include/c++/13/bits/atomic_lockfree_defines.h:
@@ -1898,6 +1913,8 @@ CMakeFiles/Trab1.dir/mainwindow.cpp.o: /home/matheus/Documentos/GitHub/FPI/Códi
 /usr/include/c++/13/bits/char_traits.h:
 
 /usr/include/x86_64-linux-gnu/qt6/QtWidgets/qslider.h:
+
+/usr/include/x86_64-linux-gnu/qt6/QtWidgets/qdialogbuttonbox.h:
 
 /usr/include/x86_64-linux-gnu/qt6/QtWidgets/QFrame:
 
@@ -2054,6 +2071,8 @@ CMakeFiles/Trab1.dir/mainwindow.cpp.o: /home/matheus/Documentos/GitHub/FPI/Códi
 /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
 
 /usr/include/c++/13/pstl/pstl_config.h:
+
+/usr/include/x86_64-linux-gnu/qt6/QtWidgets/qcheckbox.h:
 
 /usr/include/c++/13/stdexcept:
 
@@ -2212,6 +2231,8 @@ CMakeFiles/Trab1.dir/mainwindow.cpp.o: /home/matheus/Documentos/GitHub/FPI/Códi
 /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h:
 
 /usr/include/x86_64-linux-gnu/bits/local_lim.h:
+
+/usr/include/x86_64-linux-gnu/qt6/QtWidgets/QGridLayout:
 
 /usr/include/c++/13/sstream:
 

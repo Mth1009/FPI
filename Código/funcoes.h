@@ -17,4 +17,8 @@ unsigned char* ampliar(unsigned char *dados, int largura, int altura);
 void rotacionar90(unsigned char *dados, int largura, int altura, int n);
 void zoomOut(unsigned char *dados, int largura, int altura, int sx, int sy);
 void convolucao(unsigned char *dados, int largura, int altura, const double kernel[3][3], bool passa_baixas, bool adicionar_127);
+void equalizar_histograma(unsigned char *dados, int largura, int altura);
+void matching_histograma(unsigned char *dados, int largura, int altura,
+                         const unsigned char *referencia,
+                         int largura_referencia, int altura_referencia);
 #endif // FUNCOES_H

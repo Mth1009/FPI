@@ -138,7 +138,9 @@ void MainWindow::montarInterface() {
         "Girar 90 graus - horario",
         "Girar 90 graus - anti-horario",
         "Ampliar 2x",
-        "Convolucao 3x3"
+        "Convolucao 3x3",
+        "Equalizar histograma",
+        "Correspondencia de histograma"
     });
 
     aplicarButton = new QPushButton("Aplicar", barraFerramentas);
@@ -216,6 +218,8 @@ void MainWindow::aplicarOperacaoSelecionada() {
         case 10: rotacionarAntiHorario(); break;
         case 11: ampliarImagem(); break;
         case 12: aplicarConvolucao(); break;
+        case 13: equalizarHistograma(); break;
+        case 14: corresponderHistograma(); break;
         default: break;
     }
 }
@@ -547,6 +551,134 @@ void MainWindow::aplicarConvolucao() {
     convolucao(dadosResultado.data(), largura, altura, kernel,
                passaBaixas->isChecked(), adicionar127->isChecked());
     atualizarResultado("Convolucao aplicada: " + presetCombo->currentText());
+}
+
+void MainWindow::equalizarHistograma() {
+    if (dadosResultado.empty()) return;
+
+    bool imagemCinza = true;
+    for (size_t i = 0; i < dadosResultado.size(); i += 3) {
+        if (dadosResultado[i] != dadosResultado[i + 1] ||
+            dadosResultado[i] != dadosResultado[i + 2]) {
+            imagemCinza = false;
+            break;
+        }
+    }
+
+    std::vector<int> histogramaAntes;
+    if (imagemCinza) {
+        histogramaAntes = hist(dadosResultado.data(), largura, altura);
+    }
+
+    equalizar_histograma(dadosResultado.data(), largura, altura);
+    atualizarResultado("Histograma equalizado");
+
+    if (!imagemCinza) {
+        return;
+    }
+
+    const std::vector<int> histogramaDepois =
+        hist(dadosResultado.data(), largura, altura);
+    const QImage graficoAntes = imagem_histograma(histogramaAntes);
+    const QImage graficoDepois = imagem_histograma(histogramaDepois);
+
+    auto *janelaHistogramas = new QDialog(this);
+    janelaHistogramas->setAttribute(Qt::WA_DeleteOnClose);
+    janelaHistogramas->setWindowTitle("Histogramas antes e depois da equalizacao");
+    janelaHistogramas->resize(1100, 500);
+
+    auto *layout = new QHBoxLayout(janelaHistogramas);
+
+    auto criarPainel = [janelaHistogramas](const QString &titulo,
+                                           const QImage &grafico) {
+        auto *painel = new QWidget(janelaHistogramas);
+        auto *painelLayout = new QVBoxLayout(painel);
+        auto *tituloLabel = new QLabel(titulo, painel);
+        tituloLabel->setAlignment(Qt::AlignCenter);
+        tituloLabel->setObjectName("panelTitle");
+
+        auto *graficoLabel = new QLabel(painel);
+        graficoLabel->setAlignment(Qt::AlignCenter);
+        graficoLabel->setPixmap(QPixmap::fromImage(grafico).scaled(
+            500, 380, Qt::IgnoreAspectRatio, Qt::FastTransformation));
+
+        painelLayout->addWidget(tituloLabel);
+        painelLayout->addWidget(graficoLabel);
+        return painel;
+    };
+
+    layout->addWidget(criarPainel("ANTES", graficoAntes));
+    layout->addWidget(criarPainel("DEPOIS", graficoDepois));
+    janelaHistogramas->show();
+}
+
+void MainWindow::corresponderHistograma() {
+    if (dadosResultado.empty()) return;
+
+    auto imagemCinza = [](const std::vector<unsigned char> &dados) {
+        for (size_t i = 0; i + 2 < dados.size(); i += 3) {
+            if (dados[i] != dados[i + 1] || dados[i] != dados[i + 2]) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    if (!imagemCinza(dadosResultado)) {
+        QMessageBox::warning(
+            this, "Imagem principal colorida",
+            "A correspondencia de histograma aceita somente imagens em tons "
+            "de cinza. Converta a imagem principal para tons de cinza antes "
+            "de aplicar esta operacao.");
+        return;
+    }
+
+    const QString pastaInicial = caminhoAtual.isEmpty()
+        ? QDir::currentPath()
+        : QFileInfo(caminhoAtual).absolutePath();
+    const QString caminhoReferencia = QFileDialog::getOpenFileName(
+        this,
+        "Escolher imagem de referencia em tons de cinza",
+        pastaInicial,
+        "Imagens JPEG (*.jpg *.jpeg);;Todos os arquivos (*)");
+
+    if (caminhoReferencia.isEmpty()) {
+        return;
+    }
+
+    int larguraReferencia = 0;
+    int alturaReferencia = 0;
+    int canaisReferencia = 0;
+    unsigned char *carregada = stbi_load(
+        caminhoReferencia.toUtf8().constData(),
+        &larguraReferencia, &alturaReferencia, &canaisReferencia, 3);
+
+    if (carregada == nullptr) {
+        QMessageBox::critical(
+            this, "Nao foi possivel abrir",
+            "A imagem de referencia selecionada nao pode ser lida.");
+        return;
+    }
+
+    const size_t tamanhoReferencia =
+        static_cast<size_t>(larguraReferencia) * alturaReferencia * 3;
+    std::vector<unsigned char> dadosReferencia(
+        carregada, carregada + tamanhoReferencia);
+    stbi_image_free(carregada);
+
+    if (!imagemCinza(dadosReferencia)) {
+        QMessageBox::warning(
+            this, "Imagem de referencia colorida",
+            "Escolha uma imagem de referencia em tons de cinza.");
+        return;
+    }
+
+    matching_histograma(
+        dadosResultado.data(), largura, altura,
+        dadosReferencia.data(), larguraReferencia, alturaReferencia);
+    atualizarResultado(
+        "Correspondencia de histograma aplicada usando " +
+        QFileInfo(caminhoReferencia).fileName());
 }
 
 void MainWindow::restaurarOriginal() {

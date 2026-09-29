@@ -49,6 +49,8 @@ private:
     void rotacionarAntiHorario();
     void ampliarImagem();
     void aplicarConvolucao();
+    void equalizarHistograma();
+    void corresponderHistograma();
     void restaurarOriginal();
     void atualizarResultado(const QString &mensagem);
     void atualizarControles(bool habilitados);

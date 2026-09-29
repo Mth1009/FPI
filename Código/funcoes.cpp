@@ -404,3 +404,90 @@ void convolucao(unsigned char *dados, int largura, int altura,
     }
 }
 
+void equalizar_histograma(unsigned char *dados, int largura, int altura){
+    if(dados == nullptr || largura <= 0 || altura <= 0){
+        return;
+    }
+
+    // O mapeamento e calculado a partir do histograma de luminancia.
+    std::vector<int> histograma_luminancia = hist(dados, largura, altura);
+    std::vector<int> histograma_cumulativo(256, 0);
+    unsigned char mapeamento[256];
+
+    histograma_cumulativo[0] = histograma_luminancia[0];
+    for(int tom = 1; tom < 256; tom++){
+        histograma_cumulativo[tom] =
+            histograma_cumulativo[tom - 1] + histograma_luminancia[tom];
+    }
+
+    int total_pixels = largura * altura;
+    for(int tom = 0; tom < 256; tom++){
+        double normalizado =
+            static_cast<double>(histograma_cumulativo[tom]) / total_pixels;
+        mapeamento[tom] = static_cast<unsigned char>(
+            std::clamp(static_cast<int>(std::round(255.0 * normalizado)), 0, 255));
+    }
+
+    // O mesmo mapeamento de luminancia e aplicado independentemente a R, G e B.
+    int total_bytes = total_pixels * 3;
+    for(int i = 0; i < total_bytes; i++){
+        dados[i] = mapeamento[dados[i]];
+    }
+}
+
+void matching_histograma(unsigned char *dados, int largura, int altura,const unsigned char *referencia,int largura_referencia, int altura_referencia ){
+    if(dados == nullptr || referencia == nullptr ||largura <= 0 || altura <= 0 ||largura_referencia <= 0 || altura_referencia <= 0){
+        return;
+    }
+
+    const std::vector<int> histograma_origem = hist(dados, largura, altura);
+    const std::vector<int> histograma_referencia =hist(referencia, largura_referencia, altura_referencia);
+
+    double acumulado_origem[256] = {};
+    double acumulado_referencia[256] = {};
+    unsigned char mapeamento[256] = {};
+
+    const double total_origem = static_cast<double>(largura) * altura;
+    const double total_referencia =
+        static_cast<double>(largura_referencia) * altura_referencia;
+
+    acumulado_origem[0] = histograma_origem[0] / total_origem;
+    acumulado_referencia[0] =
+        histograma_referencia[0] / total_referencia;
+
+    for(int tom = 1; tom < 256; tom++){
+        acumulado_origem[tom] = acumulado_origem[tom - 1] +
+                                histograma_origem[tom] / total_origem;
+        acumulado_referencia[tom] = acumulado_referencia[tom - 1] +
+                                    histograma_referencia[tom] / total_referencia;
+    }
+
+    // Para cada tom da origem, encontra o tom cuja distribuicao cumulativa  eh  a mais proxima na imagem de referencia.
+    for(int tom_origem = 0; tom_origem < 256; tom_origem++){
+        int melhor_tom = 0;
+        double menor_diferenca = std::abs(
+            acumulado_origem[tom_origem] - acumulado_referencia[0]);
+
+        for(int tom_referencia = 1; tom_referencia < 256; tom_referencia++){
+            const double diferenca = std::abs(
+                acumulado_origem[tom_origem] -
+                acumulado_referencia[tom_referencia]);
+
+            if(diferenca < menor_diferenca){
+                menor_diferenca = diferenca;
+                melhor_tom = tom_referencia;
+            }
+        }
+
+        mapeamento[tom_origem] = static_cast<unsigned char>(melhor_tom);
+    }
+
+    const int total_pixels = largura * altura;
+    for(int pixel = 0; pixel < total_pixels; pixel++){
+        const int pos = pixel * 3;
+        const unsigned char novo_tom = mapeamento[dados[pos]];
+        dados[pos] = novo_tom;
+        dados[pos + 1] = novo_tom;
+        dados[pos + 2] = novo_tom;
+    }
+}
