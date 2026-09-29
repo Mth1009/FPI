@@ -1,0 +1,41 @@
+# CMake e artefatos de compilacao
+/build/
+/Código/build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+compile_commands.json
+_deps/
+.qt/
+
+# Binarios e arquivos intermediarios
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+/Código/Trab1
+/Código/main
+/Código/ativ1
+
+# Qt Creator
+*.pro.user
+*.pro.user.*
+*.autosave
+.qtc_clangd/
+
+# Editores e sistema operacional
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
